@@ -480,8 +480,8 @@ namespace ApiVis {
       return $"{indent}{String.Join($"\n{indent}", members)}";
     }
 
-    public IEnumerable<MethodInfo> ExtensionMethods(Type tExtender) {
-      return StaticMembers(tExtender).
+    public IEnumerable<MethodInfo> ExtensionMethods(Type tExtension) {
+      return StaticMembers(tExtension).
         Where(m =>
           m.MemberType == MemberTypes.Method &&
           m.IsDefined(typeof (ExtensionAttribute), false) &&
@@ -490,23 +490,23 @@ namespace ApiVis {
         Select(m => (MethodInfo) m);
     }
 
-    public IEnumerable<MethodInfo> ExtensionMethods(Type tExtender, Type tTarget) {
-      return ExtensionMethods(tExtender).
+    public IEnumerable<MethodInfo> ExtensionMethods(Type tExtension, Type tTarget) {
+      return ExtensionMethods(tExtension).
         Where(meth => {
-          var tExtThis = meth.GetParameters()[0].ParameterType;
+          var tExtMethThis = meth.GetParameters()[0].ParameterType;
 
-          return CanExtend(tExtThis, tTarget);
+          return CanExtend(tExtMethThis, tTarget);
         });
     }
 
-    public bool CanExtend(Type tExtThis, Type tTarget) {
-      if (tExtThis.IsAssignableFrom(tTarget)) {
+    public bool CanExtend(Type tExtMethThis, Type tTarget) {
+      if (tExtMethThis.IsAssignableFrom(tTarget)) {
         return true;
-      } else if (tExtThis.IsGenericType && tTarget.IsGenericType) {
-        var tGenExtThis = tExtThis.GetGenericTypeDefinition();
+      } else if (tExtMethThis.IsGenericType && tTarget.IsGenericType) {
+        var tGenExtMethThis = tExtMethThis.GetGenericTypeDefinition();
         var tGenTarget = tTarget.GetGenericTypeDefinition();
 
-        if (tGenExtThis == tGenTarget) {
+        if (tGenExtMethThis == tGenTarget) {
           // TODO: Rule out false matches?
 
           return true;
@@ -578,17 +578,17 @@ namespace ApiVis {
 
     public IEnumerable<Type> Extensions(Type tTarget) {
       return AppDomainTypes.
-        Where(tExtender =>
-          IsExtensionClass(tExtender) &&
-          ExtensionMethods(tExtender).
+        Where(tExtension =>
+          IsExtensionClass(tExtension) &&
+          ExtensionMethods(tExtension).
             Any(meth => {
-              var tExtThis = meth.GetParameters()[0].ParameterType;
+              var tExtMethThis = meth.GetParameters()[0].ParameterType;
 
-              return CanExtend(tExtThis, tTarget);
+              return CanExtend(tExtMethThis, tTarget);
             })
         ).
-        OrderBy(_t => _t.Namespace).
-        ThenBy(_t => _t.FullName);
+        OrderBy(tExtension => tExtension.Namespace).
+        ThenBy(tExtension => tExtension.FullName);
     }
 
     public string ChainStr(Type t, bool namespaced = false, string indent = "") {
