@@ -1,4 +1,4 @@
-# apivis.net
+# ApiVis.NET
 
 .NET types API visualization
 
