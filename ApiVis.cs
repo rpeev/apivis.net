@@ -502,19 +502,34 @@ namespace ApiVis {
     public bool CanExtend(Type tExtMethThis, Type tTarget) {
       if (tExtMethThis.IsAssignableFrom(tTarget)) {
         return true;
-      } else if (tExtMethThis.IsGenericType && tTarget.IsGenericType) {
+      } else if (
+        (tExtMethThis.IsGenericType && tExtMethThis.ContainsGenericParameters) &&
+        tTarget.IsGenericType
+      ) {
         var tGenExtMethThis = tExtMethThis.GetGenericTypeDefinition();
         var tGenTarget = tTarget.GetGenericTypeDefinition();
 
-        if (tGenExtMethThis == tGenTarget) {
-          // TODO: Rule out false matches?
-
+        if (
+          tGenExtMethThis == tGenTarget ||
+          tGenTarget.GetInterfaces().
+            Any(i =>
+              i.IsGenericType &&
+              tGenExtMethThis == i.GetGenericTypeDefinition()
+            )
+        ) {
           return true;
         } else {
-          // TODO: More matches?
+          var b = tGenTarget;
+
+          while ((b = b.BaseType) != null) {
+            if (
+              b.IsGenericType &&
+              tGenExtMethThis == b.GetGenericTypeDefinition()
+            ) {
+              return true;
+            }
+          }
         }
-      } else {
-        // TODO: More matches?
       }
 
       return false;
