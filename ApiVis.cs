@@ -412,6 +412,15 @@ namespace ApiVis {
       return $"{name}{desc}({args}): {type}";
     }
 
+    public string ExtensionMethodStr(MethodInfo meth, bool namespaced = false, string indent = "") {
+      var name = MethodNameStr(meth, namespaced);
+      var desc = MethodDescStr(meth);
+      var args = ArgsStr(meth.GetParameters().Skip(1).ToArray(), namespaced, indent);
+      var type = TypeStr(meth.ReturnType, namespaced);
+
+      return $"{name}{desc}({args}): {type}";
+    }
+
     public string EventStr(EventInfo ev, bool namespaced = false, string indent = "") {
       var name = ev.Name;
       var desc = EventDescStr(ev);
@@ -716,7 +725,7 @@ namespace ApiVis {
         var type = TypeStr(e, true);
         var assembly = Path.GetFileName(e.Assembly.Location);
         var methods = ExtensionMethods(e, t).
-          Select(meth => $"{indent}{ws}  {MethodStr(meth)}");
+          Select(meth => $"{indent}{ws}  {ExtensionMethodStr(meth)}");
 
         if (sb.Length > 0) {
           sb.Append("\n");
