@@ -637,10 +637,14 @@ namespace ApiVis {
       }
 
       if (!t.IsInterface) {
-        foreach (var i in Interfaces(t)) {
+        var ifaces = Interfaces(t);
+
+        foreach (var i in ifaces) {
           AppendType(i, namespaced, indent, ws, sb);
         }
-        ws += "  ";
+        if (ifaces.Any()) {
+          ws += "  ";
+        }
       }
 
       AppendType(t, namespaced, indent, ws, sb);
@@ -711,10 +715,14 @@ namespace ApiVis {
       }
 
       if (!t.IsInterface) {
-        foreach (var i in Interfaces(t)) {
+        var ifaces = Interfaces(t);
+
+        foreach (var i in ifaces) {
           AppendApi(i, namespaced, indent, ws, sb);
         }
-        ws += "  ";
+        if (ifaces.Any()) {
+          ws += "  ";
+        }
       }
 
       AppendApi(t, namespaced, indent, ws, sb);
