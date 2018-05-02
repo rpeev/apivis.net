@@ -512,23 +512,21 @@ namespace ApiVis {
       if (tExtMethThis.IsAssignableFrom(tTarget)) {
         return true;
       } else if (
-        (tExtMethThis.IsGenericType && tExtMethThis.ContainsGenericParameters) &&
-        tTarget.IsGenericType
+        tExtMethThis.IsGenericType &&
+        tExtMethThis.ContainsGenericParameters
       ) {
         var tGenExtMethThis = tExtMethThis.GetGenericTypeDefinition();
-        var tGenTarget = tTarget.GetGenericTypeDefinition();
 
         if (
-          tGenExtMethThis == tGenTarget ||
-          tGenTarget.GetInterfaces().
-            Any(i =>
-              i.IsGenericType &&
-              tGenExtMethThis == i.GetGenericTypeDefinition()
-            )
+          (tTarget.IsGenericType &&
+          tGenExtMethThis == tTarget.GetGenericTypeDefinition()) ||
+          tTarget.GetInterfaces().Any(i =>
+            i.IsGenericType &&
+            tGenExtMethThis == i.GetGenericTypeDefinition())
         ) {
           return true;
         } else {
-          var b = tGenTarget;
+          var b = tTarget;
 
           while ((b = b.BaseType) != null) {
             if (
