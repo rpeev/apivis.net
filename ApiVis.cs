@@ -731,7 +731,7 @@ namespace ApiVis {
         var type = TypeStr(e, true);
         var assembly = Path.GetFileName(e.Assembly.Location);
         var methods = ExtensionMethods(e, t).
-          Select(meth => $"{indent}{ws}  {ExtensionMethodStr(meth)}");
+          Select(meth => $"{indent}{ws}  {ExtensionMethodStr(meth, namespaced, $"{indent}{ws}  ")}");
 
         if (sb.Length > 0) {
           sb.Append("\n");
