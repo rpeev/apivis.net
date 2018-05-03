@@ -625,6 +625,17 @@ namespace ApiVis {
         _sb.Append($"{_indent}{_ws}[{kind} {nest}{type}]");
       }
 
+      void AppendExtType(Type _t, bool _namespaced, string _indent, string _ws, StringBuilder _sb) {
+        var kind = "extension";
+        var type = TypeStr(_t, true);
+        var assembly = Path.GetFileName(_t.Assembly.Location);
+
+        if (_sb.Length > 0) {
+          _sb.Append("\n");
+        }
+        _sb.Append($"{_indent}{_ws}[{kind} {type}] ({assembly})");
+      }
+
       var bases = (!t.IsInterface) ? Bases(t) : Interfaces(t);
       var sb = new StringBuilder();
       var ws = "";
@@ -649,14 +660,7 @@ namespace ApiVis {
       ws += "  ";
 
       foreach (var e in Extensions(t)) {
-        var kind = "extension";
-        var type = TypeStr(e, true);
-        var assembly = Path.GetFileName(e.Assembly.Location);
-
-        if (sb.Length > 0) {
-          sb.Append("\n");
-        }
-        sb.Append($"{indent}{ws}[{kind} {type}] ({assembly})");
+        AppendExtType(e, namespaced, indent, ws, sb);
       }
 
       return sb.ToString();
@@ -703,6 +707,19 @@ namespace ApiVis {
         _sb.Append($"{_indent}{_ws}[{kind} {nest}{type}{note}]\n{members}");
       }
 
+      void AppendExtApi(Type _e, Type _t, bool _namespaced, string _indent, string _ws, StringBuilder _sb) {
+        var kind = "extension";
+        var type = TypeStr(_e, true);
+        var assembly = Path.GetFileName(_e.Assembly.Location);
+        var methods = ExtensionMethods(_e, _t).
+          Select(meth => $"{_indent}{_ws}  {ExtensionMethodStr(meth, _namespaced, $"{_indent}{_ws}  ")}");
+
+        if (_sb.Length > 0) {
+          _sb.Append("\n");
+        }
+        _sb.Append($"{_indent}{_ws}[{kind} {type}] ({assembly})\n{String.Join("\n", methods)}");
+      }
+
       var bases = (!t.IsInterface) ? Bases(t) : Interfaces(t);
       var sb = new StringBuilder();
       var ws = "";
@@ -727,16 +744,7 @@ namespace ApiVis {
       ws += "  ";
 
       foreach (var e in Extensions(t)) {
-        var kind = "extension";
-        var type = TypeStr(e, true);
-        var assembly = Path.GetFileName(e.Assembly.Location);
-        var methods = ExtensionMethods(e, t).
-          Select(meth => $"{indent}{ws}  {ExtensionMethodStr(meth, namespaced, $"{indent}{ws}  ")}");
-
-        if (sb.Length > 0) {
-          sb.Append("\n");
-        }
-        sb.Append($"{indent}{ws}[{kind} {type}] ({assembly})\n{String.Join("\n", methods)}");
+        AppendExtApi(e, t, namespaced, indent, ws, sb);
       }
 
       return sb.ToString();
