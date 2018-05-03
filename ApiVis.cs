@@ -56,11 +56,27 @@ namespace ApiVis {
 
     public Api(Type t) : this(t.Assembly) {}
 
+    public string AppDomainAssembliesStr(string indent = "") {
+      var sb = new StringBuilder();
+
+      foreach (var assembly in AppDomainAssemblies) {
+        var name = assembly.FullName;
+        var location = assembly.Location;
+
+        if (sb.Length > 0) {
+          sb.Append("\n");
+        }
+        sb.Append($"{indent}{name}\n  {indent}{location}");
+      }
+
+      return sb.ToString();
+    }
+
     public string AssemblyStr(string indent = "") {
       var name = Assembly.FullName;
       var location = Assembly.Location;
 
-      return $"{indent}{name}\n{indent}{location}";
+      return $"{indent}{name}\n  {indent}{location}";
     }
 
     public string AssemblyTypesStr(string indent = "") {
