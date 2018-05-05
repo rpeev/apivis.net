@@ -24,7 +24,7 @@ namespace ApiVis {
         Where(t => !t.IsDefined(typeof (CompilerGeneratedAttribute), false)).
         OrderBy(t => t.Assembly.FullName).
         ThenBy(t => t.Namespace).
-        ThenBy(t => t.FullName);
+        ThenBy(t => SortName(t));
     }
 
     public static bool IsStaticClass(Type t) {
@@ -37,6 +37,16 @@ namespace ApiVis {
         t.IsDefined(typeof (ExtensionAttribute), false);
     }
 
+    public static string SortName(Type t) {
+      return t.FullName ?? t.Name;
+    }
+
+    public static string SortName(MemberInfo m) {
+      return (m.MemberType == MemberTypes.NestedType) ?
+        ((Type) m).FullName ?? m.Name :
+        m.Name;
+    }
+
     public Assembly Assembly { get; private set; }
     public IEnumerable<Type> AssemblyTypes { get; private set; }
     public IEnumerable<string> AssemblyNamespaces { get; private set; }
@@ -47,7 +57,7 @@ namespace ApiVis {
         GetTypes().
         Where(t => !t.IsDefined(typeof (CompilerGeneratedAttribute), false)).
         OrderBy(t => t.Namespace).
-        ThenBy(t => t.FullName);
+        ThenBy(t => SortName(t));
       AssemblyNamespaces = AssemblyTypes.
         GroupBy(t => t.Namespace).
         Select(g => g.First().Namespace).
@@ -95,7 +105,7 @@ namespace ApiVis {
     public IEnumerable<Type> AssemblyNamespaceTypes(string ns) {
       return AssemblyTypes.
         Where(t => ns == t.Namespace).
-        OrderBy(t => t.FullName);
+        OrderBy(t => SortName(t));
     }
 
     public string AssemblyNamespaceTypesStr(string ns, string indent = "") {
@@ -495,7 +505,7 @@ namespace ApiVis {
           m.MemberType == MemberTypes.NestedType &&
           m.IsDefined(typeof (CompilerGeneratedAttribute), false)
         )).
-        OrderBy(m => m.Name);
+        OrderBy(m => SortName(m));
     }
 
     public string StaticMembersStr(Type t, bool namespaced = false, string indent = "") {
@@ -569,7 +579,7 @@ namespace ApiVis {
           m.MemberType == MemberTypes.NestedType &&
           m.IsDefined(typeof (CompilerGeneratedAttribute), false)
         )).
-        OrderBy(m => m.Name);
+        OrderBy(m => SortName(m));
     }
 
     public string MembersStr(Type t, bool namespaced = false, string indent = "") {
@@ -611,7 +621,8 @@ namespace ApiVis {
     public IEnumerable<Type> Interfaces(Type t) {
       return t.GetInterfaces().
         OrderBy(i => i.Namespace).
-        ThenBy(i => i.FullName);
+        ThenBy(i => SortName(i)).
+        ThenBy(i => i.Assembly.FullName);
     }
 
     public IEnumerable<Type> Extensions(Type tTarget) {
@@ -626,7 +637,8 @@ namespace ApiVis {
             })
         ).
         OrderBy(tExtension => tExtension.Namespace).
-        ThenBy(tExtension => tExtension.FullName);
+        ThenBy(tExtension => SortName(tExtension)).
+        ThenBy(tExtension => tExtension.Assembly.FullName);
     }
 
     public string ChainStr(Type t, bool namespaced = false, string indent = "") {
@@ -634,22 +646,27 @@ namespace ApiVis {
         var kind = KindStr(_t);
         var nest = NestingStr(_t, _namespaced);
         var type = TypeStr(_t, _namespaced);
+        var assembly = (_namespaced) ?
+          $" ({Path.GetFileName(_t.Assembly.Location)})" :
+          "";
 
         if (_sb.Length > 0) {
           _sb.Append("\n");
         }
-        _sb.Append($"{_indent}{_ws}[{kind} {nest}{type}]");
+        _sb.Append($"{_indent}{_ws}[{kind} {nest}{type}]{assembly}");
       }
 
       void AppendExtType(Type _t, bool _namespaced, string _indent, string _ws, StringBuilder _sb) {
         var kind = "extension";
-        var type = TypeStr(_t, true);
-        var assembly = Path.GetFileName(_t.Assembly.Location);
+        var type = TypeStr(_t, _namespaced);
+        var assembly = (_namespaced) ?
+          $" ({Path.GetFileName(_t.Assembly.Location)})" :
+          "";
 
         if (_sb.Length > 0) {
           _sb.Append("\n");
         }
-        _sb.Append($"{_indent}{_ws}[{kind} {type}] ({assembly})");
+        _sb.Append($"{_indent}{_ws}[{kind} {type}]{assembly}");
       }
 
       var bases = (!t.IsInterface) ? Bases(t) : Interfaces(t);
@@ -686,13 +703,14 @@ namespace ApiVis {
       void AppendApi(Type _t, bool _namespaced, string _indent, string _ws, StringBuilder _sb) {
         var kind = KindStr(_t);
         var nest = NestingStr(_t, _namespaced);
-        var type = TypeStr(_t, _namespaced);
+        var type = TypeStr(_t, true);
+        var assembly = $" ({Path.GetFileName(_t.Assembly.Location)})";
         var members = StaticMembersStr(_t, _namespaced, $"{_indent}{_ws}  ");
 
         if (_sb.Length > 0) {
           _sb.Append("\n");
         }
-        _sb.Append($"{_indent}{_ws}[{kind} {nest}{type} (static API)]\n{members}");
+        _sb.Append($"{_indent}{_ws}[{kind} {nest}{type} (static API)]{assembly}\n{members}");
       }
 
       var bases = (!t.IsInterface) ? Bases(t) : Interfaces(t);
@@ -713,27 +731,28 @@ namespace ApiVis {
       void AppendApi(Type _t, bool _namespaced, string _indent, string _ws, StringBuilder _sb) {
         var kind = KindStr(_t);
         var nest = NestingStr(_t, _namespaced);
-        var type = TypeStr(_t, _namespaced);
-        var members = MembersStr(_t, _namespaced, $"{_indent}{_ws}  ");
+        var type = TypeStr(_t, true);
         var note = (_t.IsInterface) ? "" : " (instance API)";
+        var assembly = $" ({Path.GetFileName(_t.Assembly.Location)})";
+        var members = MembersStr(_t, _namespaced, $"{_indent}{_ws}  ");
 
         if (_sb.Length > 0) {
           _sb.Append("\n");
         }
-        _sb.Append($"{_indent}{_ws}[{kind} {nest}{type}{note}]\n{members}");
+        _sb.Append($"{_indent}{_ws}[{kind} {nest}{type}{note}]{assembly}\n{members}");
       }
 
       void AppendExtApi(Type _e, Type _t, bool _namespaced, string _indent, string _ws, StringBuilder _sb) {
         var kind = "extension";
         var type = TypeStr(_e, true);
-        var assembly = Path.GetFileName(_e.Assembly.Location);
+        var assembly = $" ({Path.GetFileName(_e.Assembly.Location)})";
         var methods = ExtensionMethods(_e, _t).
           Select(meth => $"{_indent}{_ws}  {ExtensionMethodStr(meth, _namespaced, $"{_indent}{_ws}  ")}");
 
         if (_sb.Length > 0) {
           _sb.Append("\n");
         }
-        _sb.Append($"{_indent}{_ws}[{kind} {type}] ({assembly})\n{String.Join("\n", methods)}");
+        _sb.Append($"{_indent}{_ws}[{kind} {type}]{assembly}\n{String.Join("\n", methods)}");
       }
 
       var bases = (!t.IsInterface) ? Bases(t) : Interfaces(t);
