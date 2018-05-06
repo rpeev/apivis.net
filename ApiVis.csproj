@@ -2,6 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeSource>true</IncludeSource>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
+
+    <Version>1.0.0</Version>
+    <Description>.NET types API visualization</Description>
+    <PackageTags>types;API;visualization</PackageTags>
+    <PackageReleaseNotes>Initial release</PackageReleaseNotes>
+
+    <Authors>Radoslav Peev</Authors>
+    <Copyright>Copyright (c) 2018 Radoslav Peev &lt;rpeev@ymail.com&gt;</Copyright>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/rpeev/apivis.net/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/rpeev/apivis.net</PackageProjectUrl>
+    <RepositoryUrl>git+https://github.com/rpeev/apivis.net.git</RepositoryUrl>
   </PropertyGroup>
 
 </Project>
